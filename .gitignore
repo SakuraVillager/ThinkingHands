@@ -7,3 +7,6 @@ build/
 .dart_tool/
 .packages
 .pub/
+
+# 忽略TODO任务列表
+TODO.md
