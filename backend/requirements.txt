@@ -1,2 +1,3 @@
 # Python 库
-requests
+openai
+dotenv
