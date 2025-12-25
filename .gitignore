@@ -11,4 +11,3 @@ build/
 # 忽略TODO任务列表
 TODO.md
 .env
-.gitignore
