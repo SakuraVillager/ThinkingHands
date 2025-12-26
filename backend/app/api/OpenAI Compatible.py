@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from storage.config_manager import get_platform_config
+from storage.config_manager import get_platform_config, get_all_platforms
 
 load_dotenv()
     
@@ -116,12 +116,16 @@ if __name__ == "__main__":
 
         match choice:
             case "1":
-                platform = input("请输入平台名称: ")
-                result = connect_OpenAICompatible(platform)
-                if result["success"]:
-                    print(f"已切换到平台: {platform}")
+                available_platforms = get_all_platforms()
+                print("可用平台列表:")
+                for i, p in enumerate(available_platforms, 1):
+                    print(f"  {i}. {p}")
+                platform_input = input("请输入平台名称: ")
+                if platform_input not in available_platforms:
+                    print(f"平台 '{platform_input}' 不存在")
                 else:
-                    print(result["message"])
+                    platform = platform_input
+                    print(f"已切换到平台: {platform}")
 
             case "2":
                 print("使用平台"+platform+",可用模型如下:")

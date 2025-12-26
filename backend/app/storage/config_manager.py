@@ -16,7 +16,19 @@ def _ensure_config_exists():
     if not CONFIG_PATH.exists() and CONFIG_DEFAULT_PATH.exists():
         shutil.copy(CONFIG_DEFAULT_PATH, CONFIG_PATH)
 
-def get_platform_config(platform: str) -> Dict:
+def _load_config():
+    """加载配置文件"""
+    _ensure_config_exists()
+    
+    try:
+        with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"配置文件不存在: {CONFIG_PATH}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"配置文件格式错误: {e}")
+
+def get_platform_config(platform: str):
     """
     从 config.json 读取配置并从环境变量读取 API key
     Args:
@@ -27,15 +39,7 @@ def get_platform_config(platform: str) -> Dict:
         FileNotFoundError: 配置文件不存在
         ValueError: 平台不存在、环境变量未设置或配置格式错误
     """
-    _ensure_config_exists()
-    
-    try:
-        with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
-            all_configs = json.load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"配置文件不存在: {CONFIG_PATH}")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"配置文件格式错误: {e}")
+    all_configs = _load_config()
     
     if platform not in all_configs:
         raise ValueError(f"平台 '{platform}' 不存在于配置文件中")
@@ -49,3 +53,8 @@ def get_platform_config(platform: str) -> Dict:
     
     config["api_key"] = api_key
     return config
+
+def get_all_platforms():
+    """获取所有可用平台列表"""
+    config_data = _load_config()
+    return list(config_data.keys())
