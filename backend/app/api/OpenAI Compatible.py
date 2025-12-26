@@ -1,35 +1,13 @@
 from openai import OpenAI
 import os
+import sys
 import json
+from pathlib import Path
 from dotenv import load_dotenv
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from storage.config_manager import get_platform_config
 
 load_dotenv()
-
-def _load_config_OpenAICompatible(platform):
-    """从 config.json 读取配置"""
-    config_path = os.path.join(os.path.dirname(__file__), "config.json")
-    
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            all_configs = json.load(f)
-        
-        if platform not in all_configs:
-            raise ValueError(f"平台 '{platform}' 不存在于配置文件中")
-        
-        config = all_configs[platform]
-
-        env_name = f"{platform.upper()}_API_TOKEN"
-        api_key = os.getenv(env_name)
-        if not api_key:
-            raise ValueError(f"环境变量 '{env_name}' 未设置")
-        config["api_key"] = api_key
-        
-        return config
-    
-    except FileNotFoundError:
-        raise FileNotFoundError(f"配置文件不存在: {config_path}")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"配置文件格式错误: {e}")
     
 def connect_OpenAICompatible(platform):
     """
@@ -46,7 +24,7 @@ def connect_OpenAICompatible(platform):
         }
     """
     try:
-        config = _load_config_OpenAICompatible(platform)
+        config = get_platform_config(platform)
         
         client = OpenAI(
             api_key=config["api_key"],
@@ -78,7 +56,7 @@ def connect_OpenAICompatible(platform):
         }
 
 def chat_OpenAICompatible(platform, user_prompt, model=None, system_prompt=None, max_tokens=None, temperature=None, top_p=None, frequency_penalty=None):
-    config = _load_config_OpenAICompatible(platform)
+    config = get_platform_config(platform)
 
     api_key = config["api_key"]
     base_url = config["base_url"]
@@ -125,7 +103,7 @@ def chat_OpenAICompatible(platform, user_prompt, model=None, system_prompt=None,
 if __name__ == "__main__":
 
     platform = "siliconflow"
-    model = _load_config_OpenAICompatible(platform)["model"]
+    model = get_platform_config(platform)["model"]
     
     run = True
 
