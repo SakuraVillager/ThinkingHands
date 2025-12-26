@@ -17,7 +17,7 @@ def _load_config(platform):
             raise ValueError(f"平台 '{platform}' 不存在于配置文件中")
         
         config = all_configs[platform]
-        
+
         env_name = f"{platform.upper()}_API_TOKEN"
         api_key = os.getenv(env_name)
         if not api_key:
@@ -70,16 +70,25 @@ def chat(platform, user_prompt, model=None, system_prompt=None, max_tokens=None,
             continue
         
         if chunk.choices[0].delta.content:
-            yield chunk.choices[0].delta.content
+            yield {"type": "content", "data": chunk.choices[0].delta.content}
         
         if hasattr(chunk.choices[0].delta, 'reasoning_content') and \
             chunk.choices[0].delta.reasoning_content:
-            yield chunk.choices[0].delta.reasoning_content
+            yield {"type": "reasoning", "data": chunk.choices[0].delta.reasoning_content}
 
 if __name__ == "__main__":
     
-    # 流式使用
-    print("【流式输出】")
+    reasoning = ""
+    content = ""
     for chunk in chat("siliconflow", "你好"):
-        print(chunk, end="", flush=True)
+        if chunk["type"] == "reasoning":
+            if not reasoning:
+                print("[思考中...]", flush=True)
+            reasoning += chunk["data"]
+            print(chunk["data"], end="", flush=True)
+        elif chunk["type"] == "content":
+            if not content:
+                print("[思考结束]", flush=True)
+            content += chunk["data"]
+            print(chunk["data"], end="", flush=True)
     print("\n")
