@@ -140,7 +140,10 @@ if __name__ == "__main__":
             case "1":
                 platform = input("请输入平台名称: ")
                 result = connect_OpenAICompatible(platform)
-                print(result)
+                if result["success"]:
+                    print(f"已切换到平台: {platform}")
+                else:
+                    print(result["message"])
 
             case "2":
                 print("使用平台"+platform+",可用模型如下:")
