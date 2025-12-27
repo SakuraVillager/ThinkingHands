@@ -12,7 +12,6 @@ DB_PATH = DB_DIR / 'chat_history.db'
 def get_db_connection():
     """建立并返回一个数据库连接。"""
     conn = sqlite3.connect(DB_PATH)
-    # 这使得查询结果可以像字典一样通过列名访问
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -43,12 +42,10 @@ def init_db():
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        
-        # 为 session_id 创建索引以加快查询速度
+
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_session_id ON chat_messages (session_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON chat_messages (timestamp)')
         
-        # 复合索引：同时优化 session_id 查询和时间排序
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_session_timestamp 
             ON chat_messages (session_id, timestamp)
@@ -71,37 +68,30 @@ def add_message(session_id: str, role: str, content: str, platform: Optional[str
         int: 新插入消息的 ID
     """
     with get_db_connection() as conn:
-        # 插入消息
         cursor = conn.execute(
             'INSERT INTO chat_messages (session_id, role, content, platform, model) VALUES (?, ?, ?, ?, ?)',
             (session_id, role, content, platform, model)
         )
         message_id = cursor.lastrowid
         
-        # 更新或创建会话记录
-        # 如果是第一条用户消息，用它作为标题（截取前30个字符）
         if role == 'user':
-            # 检查会话是否已存在
             existing = conn.execute(
                 'SELECT title FROM chat_sessions WHERE session_id = ?',
                 (session_id,)
             ).fetchone()
             
             if existing is None:
-                # 新会话：使用首条用户消息作为标题
                 title = content[:30] + ('...' if len(content) > 30 else '')
                 conn.execute(
                     'INSERT INTO chat_sessions (session_id, title) VALUES (?, ?)',
                     (session_id, title)
                 )
             else:
-                # 已存在的会话：只更新时间
                 conn.execute(
                     'UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE session_id = ?',
                     (session_id,)
                 )
         else:
-            # AI 回复：只更新时间
             conn.execute(
                 '''INSERT INTO chat_sessions (session_id, title)
                    VALUES (?, '新对话')
@@ -123,7 +113,6 @@ def load_chat(session_id: str, limit: Optional[int] = None):
                    每个字典包含 'role', 'content', 'platform', 'model' 键
     """
     if limit:
-        # 如果有限制，先获取最新的 N 条，然后反转顺序
         sql = '''
             SELECT role, content, platform, model FROM (
                 SELECT role, content, platform, model, timestamp FROM chat_messages 
@@ -176,32 +165,6 @@ def get_all_sessions():
         sessions = [dict(row) for row in cursor.fetchall()]
     
     return sessions
-
-def get_session_info(session_id: str) -> Optional[Dict[str, str]]:
-    """
-    获取指定会话的元数据信息。
-    Args:
-        session_id: 会话ID
-    Returns:
-        Dict 或 None: 包含会话信息的字典，如果会话不存在则返回 None
-    """
-    sql = '''
-        SELECT 
-            cs.session_id,
-            cs.title,
-            cs.created_at,
-            cs.updated_at,
-            COUNT(cm.id) as message_count
-        FROM chat_sessions cs
-        LEFT JOIN chat_messages cm ON cs.session_id = cm.session_id
-        WHERE cs.session_id = ?
-        GROUP BY cs.session_id
-    '''
-    
-    with get_db_connection() as conn:
-        cursor = conn.execute(sql, (session_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
     
 def delete_session(session_id: str):
     """

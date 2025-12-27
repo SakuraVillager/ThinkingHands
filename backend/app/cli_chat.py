@@ -39,7 +39,7 @@ while True:
     print("1.选择平台")
     print("2.选择模型")
     print("3.测试连接")
-    print("4.查询聊天记录(可继续对话)")
+    print("4.查询和管理聊天记录")
     print("5.开始新聊天")
     choice = input("请输入选项编号: ")
     match choice:
@@ -73,17 +73,29 @@ while True:
         case "4":
             print("查询到以下聊天记录:")
             sessions= chat_history.get_all_sessions()
+            print("序号\t会话ID\t标题\t创建时间\t最后更新时间\t消息数量")
             for i, s in enumerate(sessions, 1):
-                print(f"{i}. [{s['session_id'][:8]}] {s['title']}")
-            session_choice = int(input("请输入要继续的聊天记录编号: ")) - 1
+                print(f"{i}.\t[{s['session_id'][:8]}] {s['title']}\t{s['created_at']}\t{s['updated_at']}\t{s['message_count']}")
+            session_choice = int(input("请选择聊天记录编号: ")) - 1
             session_id = sessions[session_choice]['session_id']
-            chat_history_info = chat_history.load_chat(session_id)
-            for msg in chat_history_info:
-                if msg['role'] == 'user':
-                    print(f"[用户]: {msg['content']}")
-                elif msg['role'] == 'assistant':
-                    print(f"[ AI ] ({msg.get('platform','未知平台')}-{msg.get('model','未知模型')}): {msg['content']}")
-            chat(session_id, platform, model)
+            print(f"已选择聊天{sessions[session_choice]['title']}")
+            print("1.继续对话")
+            print("2.删除该聊天记录")
+            sub_choice = input("请输入选项编号: ")
+            match sub_choice:
+                case "1":
+                    chat_history_info = chat_history.load_chat(session_id)
+                    for msg in chat_history_info:
+                        if msg['role'] == 'user':
+                            print(f"[用户]: {msg['content']}")
+                        elif msg['role'] == 'assistant':
+                            print(f"[ AI ] ({msg.get('platform','未知平台')}-{msg.get('model','未知模型')}): {msg['content']}")
+                    chat(session_id, platform, model)
+                case "2":
+                    chat_history.delete_session(session_id)
+                    print("聊天记录已删除")
+                    continue
+            
 
         case "5":
             session_id = str(uuid.uuid4())

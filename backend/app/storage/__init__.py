@@ -4,7 +4,6 @@ from .chat_history import (
     add_message, 
     load_chat, 
     get_all_sessions,
-    get_session_info,
     delete_session,
     update_session_title,
 )
@@ -17,7 +16,6 @@ __all__ = [
     'add_message',
     'load_chat',
     'get_all_sessions',
-    'get_session_info',
     'delete_session',
     'update_session_title',
 ]
