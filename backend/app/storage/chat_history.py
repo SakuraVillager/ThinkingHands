@@ -1,7 +1,6 @@
 import sqlite3
 from pathlib import Path
-from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Optional
 import os
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -178,9 +177,7 @@ def delete_session(session_id: str):
     """
     try:
         with get_db_connection() as conn:
-            # 删除消息
             conn.execute('DELETE FROM chat_messages WHERE session_id = ?', (session_id,))
-            # 删除会话元数据
             conn.execute('DELETE FROM chat_sessions WHERE session_id = ?', (session_id,))
             conn.commit()
         return True

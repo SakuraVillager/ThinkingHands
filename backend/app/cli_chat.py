@@ -1,17 +1,14 @@
 import sys
 from pathlib import Path
 import uuid
-import re
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.storage import chat_history, config_manager
 from app.api import openai_compatible
 
-# 初始化数据库
 chat_history.init_db()
 
-# 全局状态
 session_id = None
 platform = "siliconflow"
 model = config_manager.get_platform_config(platform)["model"]
@@ -96,7 +93,6 @@ while True:
                     print("聊天记录已删除")
                     continue
             
-
         case "5":
             session_id = str(uuid.uuid4())
             print(f"{platform}平台-{model}模型")
