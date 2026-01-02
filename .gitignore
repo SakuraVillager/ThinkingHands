@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.pyc
+data/chat_history.db
 
 # Flutter
 build/
@@ -8,6 +9,6 @@ build/
 .packages
 .pub/
 
-# 忽略TODO任务列表
+config.json
 TODO.md
 .env
