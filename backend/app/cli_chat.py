@@ -18,7 +18,7 @@ def chat(session_id, platform, model):
     chat_history.add_message(session_id, "user", user_input)
     reasoning = ""
     content = ""
-    for chunk in openai_compatible.chat_OpenAICompatible(platform, user_input):
+    for chunk in openai_compatible.chat_OpenAICompatible(platform, user_input, model=model):
         if chunk["type"] == "reasoning":
             if not reasoning:
                 print("[思考中...]", flush=True)
